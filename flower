@@ -1,0 +1,54 @@
+#include <iostream>
+#include <cmath>
+#include <graphics.h>
+
+const int centerX = 300;  // X coordinate of the center of the flower
+const int centerY = 300;  // Y coordinate of the center of the flower
+
+// Function to draw a petal of the flower
+void drawPetal(int x, int y, int radius, int petalWidth) {
+    for (int i = 0; i <= 180; i += 30) {
+        double angle1 = i * M_PI / 180;
+        double angle2 = (i + 180) * M_PI / 180;
+
+        int x1 = x + radius * cos(angle1);
+        int y1 = y + radius * sin(angle1);
+
+        int x2 = x + radius * cos(angle2);
+        int y2 = y + radius * sin(angle2);
+
+        line(x1, y1, x2, y2);
+    }
+}
+
+// Function to draw a sine wave
+void drawSineWave(int startX, int startY, int amplitude, int frequency, int length) {
+    for (int x = 0; x <= length; x += 5) {
+        int y = startY + amplitude * sin(x * frequency * M_PI / 180.0);
+        putpixel(startX + x, y, WHITE);
+    }
+}
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&gd, &gm, "");
+
+    // Draw flower petals using circles
+    setcolor(YELLOW);
+    drawPetal(centerX, centerY, 50, 30);
+    drawPetal(centerX, centerY, 50, -30);
+
+    // Draw stem of the flower using a line
+    setcolor(GREEN);
+    line(centerX, centerY + 50, centerX, centerY + 200);
+
+    // Draw leaves using sine waves
+    setcolor(GREEN);
+    drawSineWave(centerX, centerY + 100, 20, 10, 100);
+    drawSineWave(centerX - 30, centerY + 120, 20, 10, 100);
+    drawSineWave(centerX + 30, centerY + 120, 20, 10, 100);
+
+    delay(5000); // Delay to display the flower
+    closegraph();
+    return 0;
+}

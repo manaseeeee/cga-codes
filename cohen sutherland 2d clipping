@@ -1,0 +1,93 @@
+#include <iostream>
+using namespace std;
+
+// Define region codes for the clipping window
+const int INSIDE = 0; // 0000
+const int LEFT = 1;   // 0001
+const int RIGHT = 2;  // 0010
+const int BOTTOM = 4; // 0100
+const int TOP = 8;    // 1000
+
+// Function to compute the region code of a point (x, y) with respect to the clipping window
+int computeCode(double x, double y, double xmin, double xmax, double ymin, double ymax) {
+    int code = INSIDE; // Start by assuming the point is inside
+
+    if (x < xmin)      // to the left of clip window
+        code |= LEFT;
+    else if (x > xmax) // to the right of clip window
+        code |= RIGHT;
+
+    if (y < ymin)      // below the clip window
+        code |= BOTTOM;
+    else if (y > ymax) // above the clip window
+        code |= TOP;
+
+    return code;
+}
+
+// Function to clip a line segment from (x1, y1) to (x2, y2) against the clipping window defined by (xmin, xmax, ymin, ymax)
+void cohenSutherlandLineClip(double x1, double y1, double x2, double y2, double xmin, double xmax, double ymin, double ymax) {
+    // Compute region codes for the endpoints of the line
+    int code1 = computeCode(x1, y1, xmin, xmax, ymin, ymax);
+    int code2 = computeCode(x2, y2, xmin, xmax, ymin, ymax);
+
+    bool accept = false;
+
+    while (true) {
+        if ((code1 == 0) && (code2 == 0)) { // Completely inside
+            accept = true;
+            break;
+        } else if (code1 & code2) { // Completely outside
+            break;
+        } else {
+            // Partially inside, calculate intersection points
+            int code_out = (code1 != 0) ? code1 : code2;
+            double x, y;
+
+            // Find intersection point
+            if (code_out & TOP) {
+                x = x1 + (x2 - x1) * (ymax - y1) / (y2 - y1);
+                y = ymax;
+            } else if (code_out & BOTTOM) {
+                x = x1 + (x2 - x1) * (ymin - y1) / (y2 - y1);
+                y = ymin;
+            } else if (code_out & RIGHT) {
+                y = y1 + (y2 - y1) * (xmax - x1) / (x2 - x1);
+                x = xmax;
+            } else if (code_out & LEFT) {
+                y = y1 + (y2 - y1) * (xmin - x1) / (x2 - x1);
+                x = xmin;
+            }
+
+            // Update the point outside the clipping window
+            if (code_out == code1) {
+                x1 = x;
+                y1 = y;
+                code1 = computeCode(x1, y1, xmin, xmax, ymin, ymax);
+            } else {
+                x2 = x;
+                y2 = y;
+                code2 = computeCode(x2, y2, xmin, xmax, ymin, ymax);
+            }
+        }
+    }
+
+    if (accept) {
+        cout << "Line segment after clipping: (" << x1 << ", " << y1 << ") to (" << x2 << ", " << y2 << ")\n";
+    } else {
+        cout << "Line segment rejected.\n";
+    }
+}
+
+int main() {
+    // Define the clipping window
+    double xmin = 50, xmax = 200, ymin = 50, ymax = 200;
+
+    // Define the line segment to be clipped
+    double x1 = 20, y1 = 150, x2 = 250, y2 = 80;
+
+    // Clip the line segment against the clipping window
+    cohenSutherlandLineClip(x1, y1, x2, y2, xmin, xmax, ymin, ymax);
+
+    return 0;
+}

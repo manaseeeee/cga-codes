@@ -1,0 +1,98 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <graphics.h>
+
+using namespace std;
+
+// Structure to represent a point
+struct Point {
+    int x, y;
+    Point(int _x, int _y) : x(_x), y(_y) {}
+};
+
+// Function to draw a line between two points
+void drawLine(int x1, int y1, int x2, int y2) {
+    line(x1, y1, x2, y2);
+}
+
+// Function to find the minimum and maximum y-coordinate of the polygon
+void findMinMaxY(const vector<Point>& polygon, int& minY, int& maxY) {
+    minY = polygon[0].y;
+    maxY = polygon[0].y;
+    for (size_t i = 1; i < polygon.size(); ++i) {
+        if (polygon[i].y < minY) minY = polygon[i].y;
+        if (polygon[i].y > maxY) maxY = polygon[i].y;
+    }
+}
+
+// Function to check if a point is inside the polygon
+bool isInsidePolygon(const vector<Point>& polygon, int x, int y) {
+    int crossings = 0;
+    size_t numPoints = polygon.size();
+    for (size_t i = 0; i < numPoints; ++i) {
+        int x1 = polygon[i].x;
+        int y1 = polygon[i].y;
+        int x2 = polygon[(i + 1) % numPoints].x;
+        int y2 = polygon[(i + 1) % numPoints].y;
+
+        if (((y1 <= y) && (y < y2)) || ((y2 <= y) && (y < y1))) {
+            // Check if the point is to the left of the edge
+            if (x < (x2 - x1) * (y - y1) / (y2 - y1) + x1)
+                crossings++;
+        }
+    }
+    return (crossings % 2 != 0);
+}
+
+// Function to fill the polygon using scan line algorithm
+void scanLineFill(const vector<Point>& polygon, int patternColor) {
+    int minY, maxY;
+    findMinMaxY(polygon, minY, maxY);
+
+    for (int y = minY; y <= maxY; ++y) {
+        vector<int> intersections;
+        size_t numPoints = polygon.size();
+        for (size_t i = 0; i < numPoints; ++i) {
+            int x1 = polygon[i].x;
+            int y1 = polygon[i].y;
+            int x2 = polygon[(i + 1) % numPoints].x;
+            int y2 = polygon[(i + 1) % numPoints].y;
+
+            if (y1 <= y && y2 > y || y2 <= y && y1 > y) {
+                // Calculate x-coordinate of the intersection point
+                float xIntersect = (float)(x2 - x1) * (y - y1) / (float)(y2 - y1) + x1;
+                intersections.push_back((int)xIntersect);
+            }
+        }
+
+        // Sort intersection points
+        sort(intersections.begin(), intersections.end());
+
+        // Draw horizontal line segments between pairs of intersection points
+        for (size_t i = 0; i < intersections.size(); i += 2) {
+            drawLine(intersections[i], y, intersections[i + 1], y);
+        }
+    }
+}
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&gd, &gm, "");
+
+    // Define the vertices of the concave polygon
+    vector<Point> polygon = { {200, 100}, {300, 200}, {400, 150}, {350, 50}, {250, 50} };
+
+    // Draw the concave polygon
+    for (size_t i = 0; i < polygon.size(); ++i) {
+        size_t j = (i + 1) % polygon.size();
+        drawLine(polygon[i].x, polygon[i].y, polygon[j].x, polygon[j].y);
+    }
+
+    // Fill the concave polygon with a pattern using scan line algorithm
+    scanLineFill(polygon, WHITE); // You can change WHITE to any other color
+
+    delay(5000); // Delay to display the result
+    closegraph();
+    return 0;
+}

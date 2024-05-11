@@ -1,0 +1,65 @@
+#include <iostream>
+#include <graphics.h> // You may need to include a graphics library like SDL or OpenGL
+
+void drawEllipse(int x0, int y0, int a, int b) {
+    int x = 0;
+    int y = b;
+    int a_sqr = a * a;
+    int b_sqr = b * b;
+    int two_a_sqr = 2 * a_sqr;
+    int two_b_sqr = 2 * b_sqr;
+    int four_a_sqr = 4 * a_sqr;
+    int four_b_sqr = 4 * b_sqr;
+    int p;
+
+    // Region 1
+    p = b_sqr - a_sqr * b + 0.25 * a_sqr;
+    while (two_b_sqr * x < two_a_sqr * y) {
+        putpixel(x0 + x, y0 + y, WHITE);
+        putpixel(x0 - x, y0 + y, WHITE);
+        putpixel(x0 + x, y0 - y, WHITE);
+        putpixel(x0 - x, y0 - y, WHITE);
+
+        x++;
+        if (p < 0)
+            p += two_b_sqr * x + b_sqr;
+        else {
+            y--;
+            p += two_b_sqr * x - two_a_sqr * y + b_sqr;
+        }
+    }
+
+    // Region 2
+    p = b_sqr * (x + 0.5) * (x + 0.5) + a_sqr * (y - 1) * (y - 1) - a_sqr * b_sqr;
+    while (y >= 0) {
+        putpixel(x0 + x, y0 + y, WHITE);
+        putpixel(x0 - x, y0 + y, WHITE);
+        putpixel(x0 + x, y0 - y, WHITE);
+        putpixel(x0 - x, y0 - y, WHITE);
+
+        y--;
+        if (p > 0)
+            p += a_sqr - two_a_sqr * y;
+        else {
+            x++;
+            p += two_b_sqr * x - two_a_sqr * y + a_sqr;
+        }
+    }
+}
+
+int main() {
+    int gd = DETECT, gm; // Initialize graphics drivers
+    initgraph(&gd, &gm, ""); // Initialize graphics mode
+
+    // Center coordinates and major, minor axis lengths
+    int x0 = 200;
+    int y0 = 200;
+    int a = 100; // Major axis length
+    int b = 50;  // Minor axis length
+
+    drawEllipse(x0, y0, a, b);
+
+    delay(5000); // Delay to display the ellipse
+    closegraph(); // Close graphics mode
+    return 0;
+}
